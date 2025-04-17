@@ -1,13 +1,16 @@
 # WLC Configuration Generator
 
-This application generates Cisco Wireless LAN Controller (WLC) configuration templates for uRWB (Ultra Reliable Wireless Backhaul) networks using OpenAI's GPT-4 model.
+This application generates Cisco Wireless LAN Controller (WLC) configuration templates for uRWB (Ultra Reliable Wireless Backhaul) networks using OpenAI's GPT-4 model. It provides an interactive interface for specifying configuration requirements in natural language.
 
 ## Features
 
-- Generate WLC configuration templates for different topologies (P2P, P2MP, Mesh, Mobility)
+- Interactive command-line interface for specifying configuration requirements
+- Support for different network topologies (P2P, P2MP, Mesh, Mobility)
 - Support for various AP models
 - Customizable parameters (channels, country codes, passphrases, etc.)
 - Uses example configurations as context for accurate template generation
+- Automatic configuration file generation
+- Input validation and error handling
 
 ## Prerequisites
 
@@ -25,39 +28,64 @@ This application generates Cisco Wireless LAN Controller (WLC) configuration tem
    ```bash
    cp .env.example .env
    ```
-4. Edit the `.env` file and add your OpenAI API key
+4. Edit the `.env` file and add your OpenAI API key:
+   ```
+   OPENAI_API_KEY=your_api_key_here
+   ```
 
 ## Usage
 
-The application can be used in two ways:
+Run the application:
+```bash
+python wlc_config_generator.py
+```
 
-1. Run the example configuration:
-   ```bash
-   python wlc_config_generator.py
-   ```
+The application will guide you through the configuration process with the following prompts:
 
-2. Import and use in your own code:
-   ```python
-   from wlc_config_generator import WLCConfigGenerator, WLCConfigRequest
+### Required Fields
+- Network topology (p2p/p2mp/mesh/mobility)
+- AP model (e.g., 9124AXI, 9178AXD)
 
-   generator = WLCConfigGenerator()
-   request = WLCConfigRequest(
-       topology="p2mp",
-       ap_model="9124AXI",
-       country_code="IT",
-       channel=136,
-       channel_width=20,
-       passphrase="your_passphrase",
-       additional_requirements="Include scanning functionality"
-   )
-   
-   config = generator.generate_config(request)
-   print(config)
-   ```
+### Optional Fields
+- AP MAC address (e.g., 60b9.c088.4f18)
+- Profile name
+- Country code (e.g., IT, US)
+- Channel number
+- Channel width (20/40/80)
+- Security passphrase
+- Additional requirements (e.g., scanning, specific features)
+
+After providing the required information, the application will:
+1. Generate the configuration
+2. Save it to a file named `wlc_config_{topology}_{ap_model}.txt`
+3. Display the configuration on screen
+
+## Example Usage
+
+```
+=== Cisco WLC Configuration Generator ===
+Please provide the following information to generate your configuration:
+
+Enter network topology (p2p/p2mp/mesh/mobility): p2mp
+Enter AP model (e.g., 9124AXI, 9178AXD): 9124AXI
+
+Optional fields (press Enter to skip):
+Enter AP MAC address (e.g., 60b9.c088.4f18): 
+Enter profile name: 
+Enter country code (e.g., IT, US): IT
+Enter channel number: 136
+Enter channel width (20/40/80): 20
+Enter security passphrase: 
+Enter any additional requirements (e.g., scanning, specific features): Include scanning functionality
+
+Generating configuration...
+Configuration generated successfully!
+Configuration saved to: wlc_config_p2mp_9124AXI.txt
+```
 
 ## Configuration Parameters
 
-The `WLCConfigRequest` class accepts the following parameters:
+The application supports the following parameters:
 
 - `topology`: Network topology (p2p, pmp, mesh, mobility)
 - `ap_model`: AP model number
@@ -69,9 +97,13 @@ The `WLCConfigRequest` class accepts the following parameters:
 - `passphrase`: Security passphrase (optional)
 - `additional_requirements`: Any additional requirements (optional)
 
-## Example Output
+## Error Handling
 
-The generated configuration will follow Cisco's WLC configuration format and will include placeholders for any unspecified parameters.
+The application includes error handling for:
+- Missing API key
+- Invalid input values
+- File system errors
+- API communication errors
 
 ## Contributing
 
