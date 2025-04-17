@@ -1,0 +1,125 @@
+# change name
+ap name AP60B9.C088.009C name Grottole
+ap name AP60B9.C088.4F18 name Irsina
+
+# preliminary configuration
+config t
+
+	wireless country IT
+
+	ap profile preliminary_ap_profile_it_ninuz
+		country IT
+		mgmtuser username curwb password 0 Curwb.Pisa.2022 secret 0 Curwb.Pisa.2022
+		exit
+
+	wireless tag site preliminary_tag_site_it_ninuz
+		ap-profile preliminary_ap_profile_it_ninuz
+		exit
+
+	# grottole
+	ap 60b9.c088.009c
+		site-tag preliminary_tag_site_it_ninuz
+		exit
+
+	# irsina
+	ap 60b9.c088.4f18
+		site-tag preliminary_tag_site_it_ninuz
+		exit
+
+	exit
+
+# urwb
+# configure simple p2p profiles and tags
+config t
+
+	wireless profile radio radio_profile_p2p_ninuz
+		urwb channel 136
+		urwb cwidth 20
+		urwb role fixed
+		urwb crypto policy none
+		exit
+
+	wireless profile urwb urwb_profile_p2p_ninuz
+		enable
+		passphrase urwbp2psimpleninuz
+		exit
+
+	wireless tag rf rf_tag_p2p_ninuz
+		urwb-profile urwb_profile_p2p_ninuz
+		dot11 5ghz slot1 radio-profile radio_profile_p2p_ninuz
+		exit
+
+	# grottole 
+	ap 60b9.c088.009c
+		rf-tag rf_tag_p2p_ninuz
+		exit
+
+	# irsina
+	ap 60b9.c088.4f18
+		rf-tag rf_tag_p2p_ninuz
+		exit
+
+	exit
+
+# coordinator
+ap name Grottole urwb mode coordinator
+
+# node
+ap name Irsina no urwb mode coordinator
+
+# reboot all devices to apply conf
+ap name Irsina reset
+ap name Grottole reset
+
+# Troubleshooting Logs:
+
+Grottole#show capwap client configuration | inc "RTS threshold"
+       RTS threshold          : 2347
+       RTS threshold          : 2347
+
+Cisco@Grottole:/# acfg_tool acfg_get_rts fmbhr1
+acfg_tool: RTS Threshold - Disabled
+
+Irsina#show capwap client configuration | inc "RTS threshold"
+       RTS threshold          : 2347
+       RTS threshold          : 2347
+
+Cisco@Irsina:/# acfg_tool acfg_get_rts fmbhr1
+acfg_tool: RTS Threshold - Disabled
+
+Grottole#show urwb mesh route status 
+5.136.79.24  5.136.79.24 1 (1,6) 3.136.79.24 400 (852001,2) 3.136.0.156 1 (851985,53) 5.136.0.156 
+
+Grottole#show urwb mpls config 
+layer 2
+unicast-flood: disabled
+arp-unicast: enabled (broadcasting not allowed)
+reduce-broadcast: enabled
+pwlist: all
+Cluster ID: disabled
+Ethernet Filter allow-list: 0x8892 0x8204, ethernet-I block
+MPLS fast failover is disabled
+ARP limit: rate 0 grace 30000 block 0
+MPLS tunnels:
+ldp_id 1198902494 debug 0 auto_pw 1
+local_gw 5.136.0.156 global_gw 0.0.0.0 pwlist { }
+mobility false vehicle_id -1 v2v_handoff 0 v2v_pws false auto_en true static_pws { 0.0.0.0 }
+lsps 1
+<5.136.0.156 5.136.79.24 1349445210> ESTABLISHED ftn 1 ilm 0 pi- 15.233315776 ka 0 { 5.136.0.156 5.136.79.24 }
+
+WLC#show ap summary | inc Irsina               
+Irsina                           2     C9124AXI-E           60b9.c088.4f18 70bc.48fe.6e40 IT   -E   192.168.89.171                            Registered   default location 
+
+Cisco@Grottole:/# ping 192.168.89.171
+PING 192.168.89.171 (192.168.89.171): 56 data bytes
+64 bytes from 192.168.89.171: seq=0 ttl=64 time=2.587 ms
+64 bytes from 192.168.89.171: seq=1 ttl=64 time=2.646 ms
+64 bytes from 192.168.89.171: seq=2 ttl=64 time=2.517 ms
+64 bytes from 192.168.89.171: seq=3 ttl=64 time=2.458 ms
+64 bytes from 192.168.89.171: seq=4 ttl=64 time=2.723 ms
+64 bytes from 192.168.89.171: seq=5 ttl=64 time=2.448 ms
+64 bytes from 192.168.89.171: seq=6 ttl=64 time=2.469 ms
+^C
+--- 192.168.89.171 ping statistics ---
+7 packets transmitted, 7 packets received, 0% packet loss
+round-trip min/avg/max = 2.448/2.549/2.723 ms

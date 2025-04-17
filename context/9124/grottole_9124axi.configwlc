@@ -1,0 +1,61 @@
+# change name
+ap name AP60B9.C088.009C name Grottole
+
+# preliminary global configuration
+config t
+	wireless country IT
+	exit
+
+# preliminary configuration
+config t
+
+	ap profile preliminary_ap_profile_it_ninuz
+		country IT
+		mgmtuser username curwb password 0 Curwb.Pisa.2022 secret 0 Curwb.Pisa.2022
+		exit
+
+	wireless tag site preliminary_tag_site_it_ninuz
+		ap-profile preliminary_ap_profile_it_ninuz
+		exit
+
+	ap 60b9.c088.009c
+		site-tag preliminary_tag_site_it_ninuz
+		exit
+
+	exit
+
+# configure simple p2p profiles and tags
+config t
+
+	wireless profile radio radio_profile_p2p_ninuz
+		urwb channel 140
+		urwb cwidth 20
+		urwb role fixed
+		exit
+
+	wireless profile urwb urwb_profile_p2p_ninuz
+		enable
+		passphrase urwbp2pninuz
+		exit
+
+	wireless tag rf rf_tag_p2p_ninuz
+		urwb-profile urwb_profile_p2p_ninuz
+		dot11 5ghz slot1 radio-profile radio_profile_p2p_ninuz
+		exit
+	
+	exit
+
+# assign tag to device
+config t
+
+	ap 60b9.c088.009c
+		rf-tag rf_tag_p2p_ninuz
+		exit
+
+	exit
+
+# configure device as coordinator - exec
+ap name Grottole urwb mode coordinator
+
+# reboot device to apply urwb configuration
+ap name Grottole reset

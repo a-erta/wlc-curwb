@@ -1,0 +1,233 @@
+# change name
+ap name AP60B9.C088.009C name Grottole
+ap name AP60B9.C088.4F18 name Irsina
+ap name AP60B9.C089.29C0 name Fregene
+
+
+# preliminary configuration
+config t
+
+	wireless country IT
+
+	ap profile preliminary_ap_profile_it_ninuz
+		country IT
+		mgmtuser username curwb password 0 Curwb.Pisa.2022 secret 0 Curwb.Pisa.2022
+		exit
+
+	wireless tag site preliminary_tag_site_it_ninuz
+		ap-profile preliminary_ap_profile_it_ninuz
+		exit
+
+	# grottole
+	ap 60b9.c088.009c
+		site-tag preliminary_tag_site_it_ninuz
+		exit
+
+	# irsina
+	ap 60b9.c088.4f18
+		site-tag preliminary_tag_site_it_ninuz
+		exit
+
+	# fregene
+	ap 60b9.c089.29c0
+		site-tag preliminary_tag_site_it_ninuz
+		exit
+
+	exit
+
+# urwb
+# configure simple p2mp profiles with scanning and tags
+config t
+
+	# primary
+	wireless profile radio radio_profile_p2mp_scan_p_ninuz
+		urwb channel 136
+		urwb cwidth 20
+		urwb role point-to-multi-point
+		urwb ptmp cluster-id p2mpclusterscanninuz
+		exit
+
+	# secondary
+	wireless profile radio radio_profile_p2mp_scan_s_ninuz
+		urwb channel 100
+		urwb cwidth 20
+		urwb role point-to-multi-point
+		urwb ptmp cluster-id p2mpclusterscanninuz
+		urwb ptmp autoscan
+		exit
+
+	# all
+	wireless profile urwb urwb_profile_p2mp_scan_ninuz
+		enable
+		passphrase urwbpoint2multipointscanninuz
+		exit
+
+	# primary
+	wireless tag rf rf_tag_p2mp_scan_primary_ninuz
+		urwb-profile urwb_profile_p2mp_scan_ninuz
+		dot11 5ghz slot1 radio-profile radio_profile_p2mp_scan_p_ninuz
+		exit
+
+	# secondary
+	wireless tag rf rf_tag_p2mp_scan_secondary_ninuz
+		urwb-profile urwb_profile_p2mp_scan_ninuz
+		dot11 5ghz slot1 radio-profile radio_profile_p2mp_scan_s_ninuz
+		exit
+
+	# grottole - primary
+	ap 60b9.c088.009c
+		rf-tag rf_tag_p2mp_scan_primary_ninuz
+		exit
+
+	# irsina - secondary
+	ap 60b9.c088.4f18
+		rf-tag rf_tag_p2mp_scan_secondary_ninuz
+		exit
+
+	# fregene
+	ap 60b9.c089.29c0
+		rf-tag rf_tag_p2mp_scan_secondary_ninuz
+		exit
+
+	exit
+
+# coordinator
+ap name Grottole urwb mode coordinator
+
+# node
+ap name Irsina no urwb mode coordinator
+ap name Fregene no urwb mode coordinator
+
+# fluidmax primary
+ap name Grottole dot11 5ghz slot 1 urwb ptmp primary
+
+# fluidmax secondary
+ap name Irsina no dot11 5ghz slot 1 urwb ptmp primary
+ap name Fregene no dot11 5ghz slot 1 urwb ptmp primary
+
+# wifi serving
+config t
+
+	# wlan
+	wlan wlan_p2mp_ninuz 1987 wlan_p2mp_ninuz_ssid
+		shutdown
+		radio policy dot11 24ghz
+		security wpa psk set-key ascii 0 cisco12345678
+		no security wpa akm dot1x
+		security wpa akm psk
+		no shutdown
+		exit
+
+	# policy profile
+	wireless profile policy policy_profile_p2mp_ninuz
+		shutdown
+		default vlan
+		no shutdown
+		exit
+	
+	# policy tag
+	wireless tag policy policy_tag_p2mp_ninuz
+		wlan wlan_p2mp_ninuz policy policy_profile_p2mp_ninuz
+		exit
+	
+	# assign tag for fluidmax secondary
+	# irsina
+	ap 60b9.c088.4f18
+		policy-tag policy_tag_p2mp_ninuz
+		exit
+
+	exit
+
+# enable wifi serving radio
+ap name Irsina no dot11 24ghz slot 0 shutdown
+
+# reboot all devices to apply conf
+ap name Irsina reset
+ap name Fregene reset
+ap name Grottole reset
+
+
+# Troubleshooting Logs:
+
+Grottole#show urwb dot11Radio 1 fluidmax 
+IP 3.136.0.156 Primary: 3.136.0.156 Version: 9 Working State: P2MP_PRIMARY Tower ID: 0 Primary Tower ID 0
+
+neigh 3.136.79.24 mac 70:BC:48:FE:6E:52 age 0.010167031 ett 402 rssi 66 to_id 0 primary 3.136.0.156 count 0 version 9 state P2MP_SECONDARY
+3.136.0.156
+3.137.41.192
+
+neigh 3.137.41.192 mac 20:CC:27:05:43:92 age 0.021951771 ett 402 rssi 33 to_id 0 primary 3.136.0.156 count 0 version 9 state P2MP_SECONDARY
+3.136.0.156
+3.136.79.24
+
+Irsina#show urwb dot11Radio 1 config 
+
+Interface:              enabled
+
+Mode:                   fluidmax secondary
+
+Frequency:              5500 MHz
+Channel:                100
+Channel width:          20 MHz
+Antenna number:         2
+TX power level:         8
+TX power:               10 dBm
+Antenna gain:           unselected
+Maximum tx mcs:         9
+High-efficiency:        enabled
+Maximum tx nss:         2
+RTS protection:         512
+guard-interval:         800 ns
+ampdu max length:       255
+distance:               3000 m
+
+Irsina#show controllers dot11Radio 1 
+Dot11Radio1     Link encap:Ethernet  HWaddr 70:BC:48:FE:6E:40  
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:33072 errors:1238 dropped:161 overruns:0 frame:0
+          TX packets:11063 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:2699 
+          RX bytes:8112105 (7.7 MiB)  TX bytes:2586829 (2.4 MiB)
+
+
+Radio Info Summary:
+=======================
+Radio: 5.0GHz  
+Carrier Set: (-E) Italy ( IT)
+Base radio MAC: 70:BC:48:FE:6E:40
+Supported Channels:
+100 104 108 112 116 120 124 128 132 136 140 
+Configured Frequency: (Slot 1) 5700MHz  Channel:140  20MHz
+Puncture bitmap: 0x0
+Radio Mode: URWB
+Radio SubType: Main
+FRA Capable: True
+Radio Role: URWB(Manual)
+Serving Frequency: (Slot 1) 5700Mhz Channel: 140 20MHz
+
+Cisco@Irsina:/# iw dev fmbhr1 info
+Interface fmbhr1
+        ifindex 110
+        wdev 0x300000012
+        addr 70:bc:48:fe:6e:52
+        mld_addr 00:00:00:00:00:00
+        type AP
+        wiphy 3
+        channel 140 (5700 MHz), width: 20 MHz, center1: 5700 MHz
+        txpower 0.00 dBm
+        multicast TXQ:
+                qsz-byt qsz-pkt flows   drops   marks   overlmt hashcol tx-bytes        tx-packets
+                                        0                               3234834         13880
+
+Grottole#show urwb dot11Radio 1 fluidmax 
+IP 3.136.0.156 Primary: 3.136.0.156 Version: 9 Working State: P2MP_PRIMARY Tower ID: 0 Primary Tower ID 0
+
+neigh 3.136.79.24 mac 70:BC:48:FE:6E:52 age 0.086170156 ett 402 rssi 65 to_id 0 primary 3.136.0.156 count 0 version 9 state P2MP_SECONDARY
+3.137.41.192
+3.136.0.156
+
+neigh 3.137.41.192 mac 20:CC:27:05:43:92 age 0.096813541 ett 402 rssi 37 to_id 0 primary 3.136.0.156 count 0 version 9 state P2MP_SECONDARY
+3.136.0.156
+3.136.79.24
+
+

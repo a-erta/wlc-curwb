@@ -1,0 +1,193 @@
+# change name
+ap name AP60B9.C088.009C name Grottole
+ap name AP60B9.C088.4F18 name Irsina
+ap name AP3C57.31C5.8070 name Tharros
+ap name AP3C57.31C5.8310 name Cabras
+
+# preliminary configuration
+config t
+
+	wireless country IT
+
+	ap profile preliminary_ap_profile_it_ninuz
+		country IT
+		mgmtuser username curwb password 0 Curwb.Pisa.2022 secret 0 Curwb.Pisa.2022
+		exit
+
+	wireless tag site preliminary_tag_site_it_ninuz
+		ap-profile preliminary_ap_profile_it_ninuz
+		exit
+
+	ap profile preliminary_ap_profile_us_ninuz
+		country US
+		mgmtuser username curwb password 0 Curwb.Pisa.2022 secret 0 Curwb.Pisa.2022
+		exit
+
+	wireless tag site preliminary_tag_site_us_ninuz
+		ap-profile preliminary_ap_profile_us_ninuz
+		exit
+
+	# grottole
+	ap 60b9.c088.009c
+		site-tag preliminary_tag_site_it_ninuz
+		exit
+
+	# irsina
+	ap 60b9.c088.4f18
+		site-tag preliminary_tag_site_it_ninuz
+		exit
+
+	# tharros
+	ap 3c57.31c5.8070 preliminary_tag_site_us_ninuz
+		site-tag 
+
+	# cabras
+	ap 3c57.31c5.8310 preliminary_tag_site_us_ninuz
+		site-tag 	
+
+	exit
+
+# urwb
+# configure multihop p2p profiles and tags
+config t
+
+	wireless profile radio radio_profile_p2p_mh1_ninuz
+		urwb channel 136
+		urwb cwidth 20
+		urwb role fixed
+		urwb crypto policy fixed-key
+		exit
+
+	wireless profile radio radio_profile_p2p_mh2_ninuz
+		urwb channel 36
+		urwb cwidth 20
+		urwb role fixed
+		urwb crypto policy fixed-key
+		exit
+
+	wireless profile urwb urwb_profile_p2p_mh_ninuz
+		enable
+		passphrase urwbp2psimpleninuz
+		exit	
+
+	wireless tag rf rf_tag_p2p_mh1_ninuz
+		urwb-profile urwb_profile_p2p_mh_ninuz
+		dot11 5ghz slot1 radio-profile radio_profile_p2p_mh1_ninuz
+		exit
+
+	wireless tag rf rf_tag_p2p_mh2_ninuz
+		urwb-profile urwb_profile_p2p_mh_ninuz
+		dot11 5ghz slot1 radio-profile radio_profile_p2p_mh2_ninuz
+		exit
+
+	# grottole
+	ap 60b9.c088.009c
+		rf-tag rf_tag_p2p_mh1_ninuz
+		exit
+
+	# irsina
+	ap 60b9.c088.4f18
+		rf-tag rf_tag_p2p_mh1_ninuz
+		exit
+
+	# tharros
+	ap 3c57.31c5.8070
+		rf-tag rf_tag_p2p_mh2_ninuz
+		exit
+
+	# cabras
+	ap 3c57.31c5.8310
+		rf-tag rf_tag_p2p_mh2_ninuz
+		exit
+
+exit
+
+# coordinator
+ap name Grottole urwb mode coordinator
+
+# node
+ap name Irsina no urwb mode coordinator
+ap name Tharros no urwb mode coordinator
+ap name Cabras no urwb mode coordinator
+
+# reboot all devices to apply conf
+ap name Irsina reset
+ap name Tharros reset
+ap name Cabras reset
+ap name Grottole reset
+
+# Troubleshooting Logs:
+
+Cisco@Tharros:/# ifconfig wired0
+wired0    Link encap:Ethernet  HWaddr 3C:57:31:C5:80:70  
+          UP BROADCAST RUNNING PROMISC MULTICAST  MTU:1500  Metric:1
+          RX packets:18014287 errors:0 dropped:1 overruns:0 frame:0
+          TX packets:3735077 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:80 
+          RX bytes:3769038862 (3.5 GiB)  TX bytes:990281561 (944.4 MiB)
+          Base address:0x7000 
+
+Cisco@Tharros:/# cat /click/port_manager/root_port_get 
+92
+
+92 / 102 --> urwb port (non direttamente connessi al wlc)
+0 --> wired (direttamente connesso al wlc)
+
+Cisco@Tharros:/# cat /click/wired0_uplinkstate/dhcp_state 
+vlan added_by active state disc_ago offer_ago req_ago ack_delay renew_at exp_at   ip gw bcast dns mtu
+   0        C  false  init       22                                             ::/0 ::    ::  ::   0
+
+disc_ago --> counter dell'ultima discovery
+req_ago --> counter dell'ultima request
+
+Cisco@Grottole:/# cat /click/wired0_uplinkstate/dhcp_state 
+vlan added_by active state disc_ago offer_ago req_ago ack_delay renew_at exp_at                ip           gw          bcast     dns mtu
+   0        C   true bound   233327    233327   10321    0.0010    36012  76078 192.168.89.159/24 192.168.89.1 192.168.89.255 0.0.0.0   0
+
+Cisco@Tharros:/# cat /click/wired0_uplinkstate/dhcpc_state_for_brain 
+type=leasefail
+
+leasefail --> non ha ancora preso indirizzo
+
+Cisco@Grottole:/# cat /click/wired0_uplinkstate/dhcpc_state_for_brain
+type=bound
+configuration_good=1
+static_ip_failover=false
+dhcp_vlan_failover=false
+vid=0
+ip=192.168.89.159
+subnet=255.255.255.0
+router=192.168.89.1
+broadcast=192.168.89.255
+mtu=0
+dns=0.0.0.0
+log=0.0.0.0
+is_static=false
+vendor_specific=\<F305C0A8590202>
+
+
+curwb-lab-sw08#monitor capture testdhcp interface Gi1/0/16 both
+curwb-lab-sw08#monitor capture testdhcp match any
+curwb-lab-sw08#monitor capture testdhcp file location flash:testdhcp.pcap
+curwb-lab-sw08#monitor capture testdhcp start
+curwb-lab-sw08#monitor capture testdhcp stop
+curwb-lab-sw08#copy flash:testdhcp.pcap scp://curwb@10.58.56.248     
+Address or name of remote host [10.58.56.248]? 
+Destination username [curwb]? 
+Destination filename [testdhcp.pcap]? 
+Writing testdhcp.pcap 
+Password: 
+ Sink: C0644 524412 testdhcp.pcap
+!
+524412 bytes copied in 8.015 secs (65429 bytes/sec)
+
+
+curwb-lab-sw08#delete flash:testdhcp.pcap
+Delete filename [testdhcp.pcap]? 
+Delete flash:/testdhcp.pcap? [confirm]
+
+Cisco@Tharros:/# cat /click/autotap1eth0/kill 
+true
+
+Cisco@Irsina:/# cat /click/autotap1eth0/kill 
+false

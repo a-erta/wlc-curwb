@@ -1,0 +1,218 @@
+# change name
+ap name AP60B9.C088.009C name Grottole
+ap name AP60B9.C088.4F18 name Irsina
+ap name AP60B9.C089.29C0 name Fregene
+
+# preliminary configuration
+config t
+
+	wireless country IT
+
+	ap profile preliminary_ap_profile_it_ninuz
+		country IT
+		mgmtuser username curwb password 0 Curwb.Pisa.2022 secret 0 Curwb.Pisa.2022
+		exit
+
+	wireless tag site preliminary_tag_site_it_ninuz
+		ap-profile preliminary_ap_profile_it_ninuz
+		exit
+
+	# grottole
+	ap 60b9.c088.009c
+		site-tag preliminary_tag_site_it_ninuz
+		exit
+
+	# irsina
+	ap 60b9.c088.4f18
+		site-tag preliminary_tag_site_it_ninuz
+		exit
+
+	# fregene
+	ap 60b9.c089.29c0
+		site-tag preliminary_tag_site_it_ninuz
+		exit
+
+	exit
+
+# urwb
+# configure simple p2mp profiles with no scanning and tags
+config t
+
+	wireless profile radio radio_profile_p2mp_ninuz
+		urwb channel 140
+		urwb cwidth 20
+		urwb role point-to-multi-point
+		urwb ptmp cluster-id p2mpclusterninuz
+		exit
+
+	wireless profile urwb urwb_profile_p2mp_ninuz
+		enable
+		passphrase urwbpoint2multipointninuz
+		exit
+
+	wireless tag rf rf_tag_p2mp_ninuz
+		urwb-profile urwb_profile_p2mp_ninuz
+		dot11 5ghz slot1 radio-profile radio_profile_p2mp_ninuz
+		exit
+
+	# grottole
+	ap 60b9.c088.009c
+		rf-tag rf_tag_p2mp_ninuz
+		exit
+
+	# irsina
+	ap 60b9.c088.4f18
+		rf-tag rf_tag_p2mp_ninuz
+		exit
+
+	# fregene
+	ap 60b9.c089.29c0
+		rf-tag rf_tag_p2mp_ninuz
+		exit
+
+	exit
+
+# coordinator
+ap name Grottole urwb mode coordinator
+
+# node
+ap name Irsina no urwb mode coordinator
+ap name Fregene no urwb mode coordinator
+
+# fluidmax primary
+ap name Grottole dot11 5ghz slot 1 urwb ptmp primary
+
+# fluidmax secondary
+ap name Irsina no dot11 5ghz slot 1 urwb ptmp primary
+ap name Fregene no dot11 5ghz slot 1 urwb ptmp primary
+
+# wifi serving
+config t
+
+	# wlan
+	wlan wlan_p2mp_ninuz 1987 wlan_p2mp_ninuz_ssid
+		shutdown
+		radio policy dot11 24ghz
+		security wpa psk set-key ascii 0 cisco12345678
+		no security wpa akm dot1x
+		security wpa akm psk
+		no shutdown
+		exit
+
+	# policy profile
+	wireless profile policy policy_profile_p2mp_ninuz
+		shutdown
+		default vlan
+		no shutdown
+		exit
+	
+	# policy tag
+	wireless tag policy policy_tag_p2mp_ninuz
+		wlan wlan_p2mp_ninuz policy policy_profile_p2mp_ninuz
+		exit
+	
+	# assign tag for fluidmax secondary
+	# irsina
+	ap 60b9.c088.4f18
+		policy-tag policy_tag_p2mp_ninuz
+		exit
+
+	exit
+
+# enable wifi serving radio
+ap name Irsina no dot11 24ghz slot 0 shutdown
+
+# reboot all devices to apply conf
+ap name Irsina reset
+ap name Fregene reset
+ap name Grottole reset
+
+
+# Troubleshooting Logs:
+
+Grottole#show urwb dot11Radio 1 fluidmax 
+IP 3.136.0.156 Primary: 3.136.0.156 Version: 9 Working State: P2MP_PRIMARY Tower ID: 0 Primary Tower ID 0
+
+neigh 3.137.41.192 mac 20:CC:27:05:43:92 age 0.085902813 ett 402 rssi 54 to_id 0 primary 3.136.0.156 count 0 version 9 state P2MP_SECONDARY
+3.136.79.24
+3.136.0.156
+
+neigh 3.136.79.24 mac 70:BC:48:FE:6E:52 age 0.032960261 ett 402 rssi 83 to_id 0 primary 3.136.0.156 count 0 version 9 state P2MP_SECONDARY
+3.136.0.156
+3.137.41.192
+
+Irsina#show urwb dot11Radio 1 fluidmax 
+IP 3.136.79.24 Primary: 3.136.0.156 Version: 9 Working State: P2MP_SECONDARY Tower ID: 0 Primary Tower ID 0
+
+neigh 3.137.41.192 mac 20:CC:27:05:43:92 age 0.036716041 ett 402 rssi 56 to_id 0 primary 3.136.0.156 count 0 version 9 state P2MP_SECONDARY
+3.136.79.24
+3.136.0.156
+
+neigh 3.136.0.156 mac 70:BC:48:FB:FA:72 age 0.081593333 ett 0 rssi 84 to_id 0 primary 3.136.0.156 count 0 version 9 state P2MP_PRIMARY
+3.136.79.24
+3.137.41.192
+
+
+WLC#show ap name Grottole dot11 5ghz slot 1 urwb detail 
+Radio Role                   : Fixed-Point-to-Multi-Point
+Channel                      : 140
+Channel Width                : 20 MHz
+AES on URWB Radio            : Fixed Key
+Key Control Rotation Timeout : 15
+DFS Role                     : Auto
+Channel List                 : Not Configured
+Point-to-Multi-Point:
+  Primary                    : Enabled
+  RSSI Threshold             : 0
+  Auto Scan                  : Disabled
+  Cluster ID                 : p2mpclusterninuz
+  Tower ID                   : 
+
+WLC#show ap name Irsina dot11 5ghz slot 1 urwb detail   
+Radio Role                   : Fixed-Point-to-Multi-Point
+Channel                      : 140
+Channel Width                : 20 MHz
+AES on URWB Radio            : Fixed Key
+Key Control Rotation Timeout : 15
+DFS Role                     : Auto
+Channel List                 : Not Configured
+Point-to-Multi-Point:
+  Primary                    : Disabled
+  RSSI Threshold             : 0
+  Auto Scan                  : Disabled
+  Cluster ID                 : p2mpclusterninuz
+  Tower ID                   : 
+
+
+Grottole#show capwap client configuration | inc "RTS threshold"
+       RTS threshold          : 2347
+       RTS threshold          : 512
+
+Cisco@Grottole:/# acfg_tool acfg_get_rts fmbhr1
+acfg_tool: RTS Threshold - 512
+
+Irsina#show capwap client configuration | inc "RTS threshold"
+       RTS threshold          : 2347
+       RTS threshold          : 512
+
+Cisco@Irsina:/# acfg_tool acfg_get_rts fmbhr1
+acfg_tool: RTS Threshold - 512
+
+WLC#show ap dot11 24ghz summary | inc Irsina
+Irsina                            70bc.48fe.6e40  0       Enabled        Up            20       *3/6 (4 dBm)    (11)*                               Local   
+
+
+rock@rock-4c-plus-56-94:~$ sudo iw dev wlan0 scan | grep SSID: | sort -u | awk '{print $2}'
+
+00DEMOVEWLC2
+Baltimora_2G
+Baltimora_5G
+Fancoil_SN2400573
+Internet
+TRE-GIV
+blizzard
+meraki-scanning
+mobility_p0
+wlan_p2mp_ninuz_ssid
+
+sudo nmcli device wifi connect "wlan_p2mp_ninuz_ssid" password "cisco12345678"

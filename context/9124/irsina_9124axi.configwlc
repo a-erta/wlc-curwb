@@ -1,0 +1,20 @@
+# change name
+ap name AP60B9.C088.4F18 name Irsina
+
+# preliminary configuration
+config t
+
+	ap profile preliminary_ap_profile_it_ninuz
+		country IT
+		mgmtuser username curwb password 0 Curwb.Pisa.2022 secret 0 Curwb.Pisa.2022
+		exit
+
+	wireless tag site preliminary_tag_site_it_ninuz
+		ap-profile preliminary_ap_profile_it_ninuz
+		exit
+
+	ap 60b9.c088.4f18
+		site-tag preliminary_tag_site_it_ninuz
+		exit
+
+	exit
